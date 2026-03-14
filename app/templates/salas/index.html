@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}Salas - CineUAM{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-building"></i> Salas</h2>
+    <a href="/salas/nueva" class="btn btn-success">
+        <i class="bi bi-plus-circle"></i> Nueva Sala
+    </a>
+</div>
+<div id="alert-container"></div>
+{% if salas %}
+<div class="row row-cols-1 row-cols-md-3 g-4">
+    {% for sala in salas %}
+    <div class="col" id="sala-{{ sala.id }}">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <i class="bi bi-building display-3 text-success"></i>
+                <h5 class="card-title mt-2">{{ sala.nombre }}</h5>
+                <p class="card-text">
+                    <span class="badge bg-primary">{{ sala.capacidad }} asientos</span>
+                    {% if sala.tipo %}
+                    <span class="badge bg-secondary">{{ sala.tipo }}</span>
+                    {% endif %}
+                </p>
+            </div>
+            <div class="card-footer d-flex justify-content-end gap-2">
+                <button class="btn btn-outline-danger btn-sm" onclick="eliminarSala({{ sala.id }}, '{{ sala.nombre }}')">
+                    <i class="bi bi-trash"></i> Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info">
+    <i class="bi bi-info-circle"></i> No hay salas registradas.
+    <a href="/salas/nueva" class="alert-link">Añade la primera sala</a>.
+</div>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+function eliminarSala(id, nombre) {
+    if (confirm(`¿Eliminar la sala "${nombre}"?`)) {
+        fetch(`/api/salas/${id}`, {method: 'DELETE'})
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById(`sala-${id}`)?.closest('.col')?.remove();
+                mostrarAlerta('success', data.mensaje || 'Sala eliminada.');
+            })
+            .catch(() => mostrarAlerta('danger', 'Error al eliminar la sala.'));
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block title %}CineUAM - Inicio{% endblock %}
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="display-5"><i class="bi bi-camera-reels"></i> Panel de Control</h1>
+        <p class="text-muted">Bienvenido al sistema de gestión de CineUAM</p>
+    </div>
+</div>
+
+<div class="row g-4 mb-5">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-film display-4"></i>
+                <h2 class="mt-2">{{ total_peliculas }}</h2>
+                <p class="card-text">Películas</p>
+                <a href="/peliculas" class="btn btn-outline-light btn-sm">Ver todas</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-building display-4"></i>
+                <h2 class="mt-2">{{ total_salas }}</h2>
+                <p class="card-text">Salas</p>
+                <a href="/salas" class="btn btn-outline-light btn-sm">Ver todas</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-calendar-event display-4"></i>
+                <h2 class="mt-2">{{ total_funciones }}</h2>
+                <p class="card-text">Funciones</p>
+                <a href="/funciones" class="btn btn-outline-light btn-sm">Ver todas</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-danger h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-ticket-perforated display-4"></i>
+                <h2 class="mt-2">{{ total_reservas }}</h2>
+                <p class="card-text">Reservas</p>
+                <a href="/reservas" class="btn btn-outline-light btn-sm">Ver todas</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-film"></i> Películas Recientes</h5>
+            </div>
+            <div class="card-body">
+                {% if peliculas_recientes %}
+                <ul class="list-group list-group-flush">
+                    {% for pelicula in peliculas_recientes %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <a href="/peliculas/{{ pelicula.id }}">{{ pelicula.titulo }}</a>
+                        <span class="badge bg-secondary">{{ pelicula.genero or 'Sin género' }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted">No hay películas registradas.</p>
+                {% endif %}
+                <a href="/peliculas/nueva" class="btn btn-primary btn-sm mt-3">
+                    <i class="bi bi-plus"></i> Añadir película
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-warning text-white">
+                <h5 class="mb-0"><i class="bi bi-calendar-event"></i> Próximas Funciones</h5>
+            </div>
+            <div class="card-body">
+                {% if funciones_proximas %}
+                <ul class="list-group list-group-flush">
+                    {% for funcion in funciones_proximas %}
+                    <li class="list-group-item">
+                        <strong>{{ funcion.pelicula.titulo }}</strong><br>
+                        <small class="text-muted">
+                            <i class="bi bi-building"></i> {{ funcion.sala.nombre }} |
+                            <i class="bi bi-clock"></i> {{ funcion.fecha_hora.strftime('%d/%m/%Y %H:%M') }}
+                        </small>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted">No hay funciones programadas.</p>
+                {% endif %}
+                <a href="/funciones/nueva" class="btn btn-warning btn-sm mt-3">
+                    <i class="bi bi-plus"></i> Añadir función
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

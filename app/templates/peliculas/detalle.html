@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block title %}{{ pelicula.titulo }} - CineUAM{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-4 mb-4">
+        {% if pelicula.imagen_url %}
+        <img src="{{ pelicula.imagen_url }}" class="img-fluid rounded shadow" alt="{{ pelicula.titulo }}">
+        {% else %}
+        <div class="bg-secondary rounded d-flex align-items-center justify-content-center" style="height:300px;">
+            <i class="bi bi-film text-white display-1"></i>
+        </div>
+        {% endif %}
+    </div>
+    <div class="col-md-8">
+        <h2>{{ pelicula.titulo }}</h2>
+        <div id="alert-container"></div>
+        <table class="table">
+            <tbody>
+                {% if pelicula.director %}
+                <tr><th>Director</th><td>{{ pelicula.director }}</td></tr>
+                {% endif %}
+                {% if pelicula.duracion_minutos %}
+                <tr><th>Duración</th><td>{{ pelicula.duracion_minutos }} minutos</td></tr>
+                {% endif %}
+                {% if pelicula.genero %}
+                <tr><th>Género</th><td><span class="badge bg-info">{{ pelicula.genero }}</span></td></tr>
+                {% endif %}
+                {% if pelicula.fecha_estreno %}
+                <tr><th>Fecha de Estreno</th><td>{{ pelicula.fecha_estreno.strftime('%d/%m/%Y') }}</td></tr>
+                {% endif %}
+            </tbody>
+        </table>
+        {% if pelicula.sinopsis %}
+        <h5>Sinopsis</h5>
+        <p>{{ pelicula.sinopsis }}</p>
+        {% endif %}
+        <div class="d-flex gap-2 mt-3">
+            <a href="/peliculas" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+            <button class="btn btn-danger" onclick="eliminarPelicula({{ pelicula.id }}, '{{ pelicula.titulo }}')">
+                <i class="bi bi-trash"></i> Eliminar
+            </button>
+        </div>
+    </div>
+</div>
+
+{% if pelicula.funciones %}
+<hr>
+<h4><i class="bi bi-calendar-event"></i> Funciones Programadas</h4>
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Sala</th>
+                <th>Fecha y Hora</th>
+                <th>Precio</th>
+                <th>Idioma</th>
+                <th>Asientos Disponibles</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for funcion in pelicula.funciones %}
+            <tr>
+                <td>{{ funcion.sala.nombre }}</td>
+                <td>{{ funcion.fecha_hora.strftime('%d/%m/%Y %H:%M') }}</td>
+                <td>{% if funcion.precio %}€{{ "%.2f"|format(funcion.precio) }}{% else %}-{% endif %}</td>
+                <td>{{ funcion.idioma or '-' }}</td>
+                <td>{{ funcion.asientos_disponibles() }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+function eliminarPelicula(id, titulo) {
+    if (confirm(`¿Eliminar "${titulo}"?`)) {
+        fetch(`/api/peliculas/${id}`, {method: 'DELETE'})
+            .then(r => r.json())
+            .then(() => window.location.href = '/peliculas')
+            .catch(() => mostrarAlerta('danger', 'Error al eliminar.'));
+    }
+}
+</script>
+{% endblock %}

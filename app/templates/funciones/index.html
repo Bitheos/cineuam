@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block title %}Funciones - CineUAM{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-calendar-event"></i> Funciones</h2>
+    <a href="/funciones/nueva" class="btn btn-warning">
+        <i class="bi bi-plus-circle"></i> Nueva Función
+    </a>
+</div>
+<div id="alert-container"></div>
+{% if funciones %}
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Película</th>
+                <th>Sala</th>
+                <th>Fecha y Hora</th>
+                <th>Precio</th>
+                <th>Idioma</th>
+                <th>Asientos Disponibles</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for funcion in funciones %}
+            <tr id="funcion-{{ funcion.id }}">
+                <td>{{ funcion.pelicula.titulo }}</td>
+                <td>{{ funcion.sala.nombre }}</td>
+                <td>{{ funcion.fecha_hora.strftime('%d/%m/%Y %H:%M') }}</td>
+                <td>{% if funcion.precio %}€{{ "%.2f"|format(funcion.precio) }}{% else %}-{% endif %}</td>
+                <td>{{ funcion.idioma or '-' }}</td>
+                <td>
+                    <span class="badge {% if funcion.asientos_disponibles() > 10 %}bg-success{% elif funcion.asientos_disponibles() > 0 %}bg-warning{% else %}bg-danger{% endif %}">
+                        {{ funcion.asientos_disponibles() }}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn btn-outline-danger btn-sm" onclick="eliminarFuncion({{ funcion.id }})">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">
+    <i class="bi bi-info-circle"></i> No hay funciones programadas.
+    <a href="/funciones/nueva" class="alert-link">Añade la primera función</a>.
+</div>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+function eliminarFuncion(id) {
+    if (confirm('¿Eliminar esta función?')) {
+        fetch(`/api/funciones/${id}`, {method: 'DELETE'})
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById(`funcion-${id}`)?.remove();
+                mostrarAlerta('success', data.mensaje || 'Función eliminada.');
+            })
+            .catch(() => mostrarAlerta('danger', 'Error al eliminar la función.'));
+    }
+}
+</script>
+{% endblock %}

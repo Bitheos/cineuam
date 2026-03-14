@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}Nueva Función - CineUAM{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="mb-0"><i class="bi bi-plus-circle"></i> Nueva Función</h4>
+            </div>
+            <div class="card-body">
+                <div id="alert-container"></div>
+                <form id="form-funcion">
+                    <div class="mb-3">
+                        <label class="form-label">Película <span class="text-danger">*</span></label>
+                        <select class="form-select" id="pelicula_id" required>
+                            <option value="">-- Seleccionar película --</option>
+                            {% for pelicula in peliculas %}
+                            <option value="{{ pelicula.id }}">{{ pelicula.titulo }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Sala <span class="text-danger">*</span></label>
+                        <select class="form-select" id="sala_id" required>
+                            <option value="">-- Seleccionar sala --</option>
+                            {% for sala in salas %}
+                            <option value="{{ sala.id }}">{{ sala.nombre }} ({{ sala.capacidad }} asientos)</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Fecha y Hora <span class="text-danger">*</span></label>
+                        <input type="datetime-local" class="form-control" id="fecha_hora" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Precio (€)</label>
+                            <input type="number" class="form-control" id="precio" min="0" step="0.50">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Idioma</label>
+                            <select class="form-select" id="idioma">
+                                <option value="">-- Seleccionar --</option>
+                                <option>Original</option>
+                                <option>Subtitulada</option>
+                                <option>Doblada</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-warning">
+                            <i class="bi bi-save"></i> Guardar
+                        </button>
+                        <a href="/funciones" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.getElementById('form-funcion').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const data = {
+        pelicula_id: parseInt(document.getElementById('pelicula_id').value),
+        sala_id: parseInt(document.getElementById('sala_id').value),
+        fecha_hora: document.getElementById('fecha_hora').value,
+        precio: parseFloat(document.getElementById('precio').value) || null,
+        idioma: document.getElementById('idioma').value || null
+    };
+    fetch('/api/funciones', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    })
+    .then(r => r.json().then(d => ({status: r.status, data: d})))
+    .then(({status, data}) => {
+        if (status === 201) {
+            window.location.href = '/funciones';
+        } else {
+            mostrarAlerta('danger', data.error || 'Error al crear la función.');
+        }
+    })
+    .catch(() => mostrarAlerta('danger', 'Error de conexión.'));
+});
+</script>
+{% endblock %}

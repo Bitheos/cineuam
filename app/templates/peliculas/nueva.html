@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block title %}Nueva Película - CineUAM{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="bi bi-plus-circle"></i> Nueva Película</h4>
+            </div>
+            <div class="card-body">
+                <div id="alert-container"></div>
+                <form id="form-pelicula">
+                    <div class="mb-3">
+                        <label class="form-label">Título <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="titulo" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Director</label>
+                            <input type="text" class="form-control" id="director">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Duración (minutos)</label>
+                            <input type="number" class="form-control" id="duracion_minutos" min="1">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Género</label>
+                            <select class="form-select" id="genero">
+                                <option value="">-- Seleccionar --</option>
+                                <option>Acción</option>
+                                <option>Comedia</option>
+                                <option>Drama</option>
+                                <option>Terror</option>
+                                <option>Ciencia Ficción</option>
+                                <option>Animación</option>
+                                <option>Romance</option>
+                                <option>Thriller</option>
+                                <option>Documental</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Fecha de Estreno</label>
+                            <input type="date" class="form-control" id="fecha_estreno">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Sinopsis</label>
+                        <textarea class="form-control" id="sinopsis" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">URL del Póster</label>
+                        <input type="url" class="form-control" id="imagen_url" placeholder="https://...">
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Guardar
+                        </button>
+                        <a href="/peliculas" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.getElementById('form-pelicula').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const data = {
+        titulo: document.getElementById('titulo').value,
+        director: document.getElementById('director').value || null,
+        duracion_minutos: parseInt(document.getElementById('duracion_minutos').value) || null,
+        genero: document.getElementById('genero').value || null,
+        sinopsis: document.getElementById('sinopsis').value || null,
+        fecha_estreno: document.getElementById('fecha_estreno').value || null,
+        imagen_url: document.getElementById('imagen_url').value || null
+    };
+    fetch('/api/peliculas', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    })
+    .then(r => r.json().then(d => ({status: r.status, data: d})))
+    .then(({status, data}) => {
+        if (status === 201) {
+            window.location.href = `/peliculas/${data.id}`;
+        } else {
+            mostrarAlerta('danger', data.error || 'Error al crear la película.');
+        }
+    })
+    .catch(() => mostrarAlerta('danger', 'Error de conexión.'));
+});
+</script>
+{% endblock %}
