@@ -15,3 +15,11 @@ model Movie {
   synopsis       String   @db.Text
   createdAt      DateTime @default(now())
 }
+
+model Sala {
+  id        Int      @id @default(autoincrement())
+  nombre    String   @unique
+  tipo      String
+  capacidad Int
+  createdAt DateTime @default(now())
+}
