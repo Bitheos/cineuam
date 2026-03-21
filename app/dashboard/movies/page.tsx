@@ -21,7 +21,7 @@ export default async function MoviesPage({ searchParams }: { searchParams: Promi
         <div className="min-h-screen bg-neutral-950 text-white p-10">
             <div className="max-w-6xl mx-auto">
                 <Link href={`/dashboard?role=${role}`} className="flex items-center gap-2 text-neutral-500 hover:text-amber-500 mb-6 transition-colors">
-                <ArrowLeft size={18} /> Volver al panel
+                    <ArrowLeft size={18} /> Volver al panel
                 </Link>
 
                 <h2 className="text-3xl font-bold mb-10 border-l-4 border-amber-500 pl-4 italic uppercase">Cartelera</h2>

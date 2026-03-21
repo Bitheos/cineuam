@@ -1,9 +1,12 @@
 import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Asientos from "@/components/SeatMapManager";
 import { prisma } from "@/lib/prisma";
 
-export default async function AsientosPage() {
+export default async function AsientosPage({ searchParams }: { searchParams: Promise<{ role: string }> }) {
+    const params = await searchParams;
+    const role = params.role || 'client';
+    const isAdmin = role === 'admin';
     // Obtenemos las salas desde MySQL
     const salasRaw = await prisma.sala.findMany({
         orderBy: { nombre: 'asc' }
@@ -21,8 +24,8 @@ export default async function AsientosPage() {
         <main className="min-h-screen bg-neutral-950 text-white p-8">
             <header className="max-w-7xl mx-auto mb-10">
                 <div className="flex items-center justify-between mb-4">
-                    <Link href="/dashboard" className="flex items-center gap-2 text-neutral-500 hover:text-amber-500 transition-colors text-sm font-bold uppercase tracking-widest">
-                        <ChevronLeft size={18} /> Volver
+                    <Link href={`/dashboard?role=${role}`} className="flex items-center gap-2 text-neutral-500 hover:text-amber-500 mb-6 transition-colors">
+                        <ArrowLeft size={18} /> Volver al panel
                     </Link>
                     <span className="text-amber-500 font-bold text-sm tracking-widest uppercase">
                         Admin: Gestión de Aforo

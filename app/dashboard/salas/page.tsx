@@ -1,20 +1,19 @@
 import Link from "next/link";
-import { ChevronLeft, Monitor, Users } from "lucide-react";
+import { ArrowLeft, Monitor, Users } from "lucide-react";
 import SalaForm from "@/components/SalaForm";
 import SalasTable from "@/components/SalasTable";
 
-export default function SalasPage() {
+export default async function SalasPage({ searchParams }: { searchParams: Promise<{ role: string }> }) {
+    const params = await searchParams;
+    const role = params.role || 'client';
+    const isAdmin = role === 'admin';
     return (
         <main className="min-h-screen bg-neutral-950 text-white p-8">
             {/* Encabezado estilo CINEUAM */}
             <header className="max-w-7xl mx-auto mb-10">
                 <div className="flex items-center justify-between mb-4">
-                    <Link
-                        href="/dashboard"
-                        className="flex items-center gap-2 text-neutral-500 hover:text-orange-500 transition-colors text-sm font-bold uppercase tracking-widest"
-                    >
-                        <ChevronLeft size={18} />
-                        Volver
+                    <Link href={`/dashboard?role=${role}`} className="flex items-center gap-2 text-neutral-500 hover:text-amber-500 mb-6 transition-colors">
+                        <ArrowLeft size={18} /> Volver al panel
                     </Link>
                     <span className="text-orange-500 font-bold text-sm tracking-widest uppercase">
                         Sesión iniciada como: ADMIN
