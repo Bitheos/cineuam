@@ -20,6 +20,13 @@ export default function DashboardPage() {
 					<h2 className="text-2xl font-bold text-white">Gestión de Salas</h2>
 					<p className="text-neutral-400 mt-2">Configura identificadores, tipos y capacidad total.</p>
 				</Link>
+
+				{/* TU TARJETA (HU-03) */}
+				<Link href="/dashboard/asientos" className="bg-neutral-900 border border-neutral-800 p-8 rounded-2xl hover:border-amber-500 transition-all group">
+					<Monitor className="text-amber-500 mb-4 group-hover:scale-110 transition-transform" size={40} />
+					<h2 className="text-2xl font-bold text-white">Gestión de Asientos</h2>
+					<p className="text-neutral-400 mt-2">Registrar mapeo de asientos</p>
+				</Link>
 			</div>
 		</div>
 	);
