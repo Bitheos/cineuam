@@ -1,5 +1,15 @@
 import { prisma } from "@/lib/prisma";
-import { Film, Monitor, LogOut, ArrowLeft, Armchair, Settings, Clock, Tag } from "lucide-react";
+import { 
+    Film, 
+    Monitor, 
+    LogOut, 
+    ArrowLeft, 
+    Armchair, 
+    Settings, 
+    Clock, 
+    Tag, 
+    CalendarDays 
+} from "lucide-react";
 import Link from "next/link";
 
 export default async function DashboardPage({ 
@@ -12,7 +22,7 @@ export default async function DashboardPage({
     const isAdmin = role === 'admin';
     const currentTab = params.tab || 'cartelera';
 
-    // Obtenemos las películas solo para la vista del cliente
+    // Obtenemos las películas para la vista del cliente
     const movies = await prisma.movie.findMany({ orderBy: { createdAt: 'desc' } });
 
     return (
@@ -96,21 +106,38 @@ export default async function DashboardPage({
                             </header>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                {/* SECCIÓN CARTELERA (PELÍCULAS Y HORARIOS) */}
                                 {currentTab === 'cartelera' && (
-                                    <Link 
-                                        href="/dashboard/movies?role=admin"
-                                        className="group bg-neutral-900 border border-neutral-800 p-12 rounded-[2.5rem] hover:border-orange-500 transition-all flex flex-col items-center text-center gap-6 shadow-2xl shadow-black"
-                                    >
-                                        <div className="p-5 bg-orange-500/10 rounded-2xl group-hover:bg-orange-500 transition-all transform group-hover:-translate-y-2">
-                                            <Settings size={48} className="text-orange-500 group-hover:text-black" />
-                                        </div>
-                                        <div>
-                                            <h3 className="text-2xl font-black uppercase italic mb-2">Gestión de Películas</h3>
-                                            <p className="text-neutral-500 text-sm max-w-[200px]">Administra el catálogo y estrenos disponibles.</p>
-                                        </div>
-                                    </Link>
+                                    <>
+                                        <Link 
+                                            href="/dashboard/movies?role=admin"
+                                            className="group bg-neutral-900 border border-neutral-800 p-12 rounded-[2.5rem] hover:border-orange-500 transition-all flex flex-col items-center text-center gap-6 shadow-2xl shadow-black"
+                                        >
+                                            <div className="p-5 bg-orange-500/10 rounded-2xl group-hover:bg-orange-500 transition-all transform group-hover:-translate-y-2">
+                                                <Settings size={48} className="text-orange-500 group-hover:text-black" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-2xl font-black uppercase italic mb-2">Gestión de Películas</h3>
+                                                <p className="text-neutral-500 text-sm max-w-50">Administra el catálogo y estrenos disponibles.</p>
+                                            </div>
+                                        </Link>
+
+                                        <Link 
+                                            href="/dashboard/schedules?role=admin"
+                                            className="group bg-neutral-900 border border-neutral-800 p-12 rounded-[2.5rem] hover:border-orange-500 transition-all flex flex-col items-center text-center gap-6 shadow-2xl shadow-black"
+                                        >
+                                            <div className="p-5 bg-orange-500/10 rounded-2xl group-hover:bg-orange-500 transition-all transform group-hover:-translate-y-2">
+                                                <CalendarDays size={48} className="text-orange-500 group-hover:text-black" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-2xl font-black uppercase italic mb-2">Gestor de Horarios</h3>
+                                                <p className="text-neutral-500 text-sm max-w-50">Asigna películas a salas evitando traslapes.</p>
+                                            </div>
+                                        </Link>
+                                    </>
                                 )}
 
+                                {/* SECCIÓN SALAS (SALAS Y ASIENTOS) */}
                                 {currentTab === 'salas' && (
                                     <>
                                         <Link 
@@ -122,7 +149,7 @@ export default async function DashboardPage({
                                             </div>
                                             <div>
                                                 <h3 className="text-2xl font-black uppercase italic mb-2">Gestión de Salas</h3>
-                                                <p className="text-neutral-500 text-sm max-w-[200px]">Configura los espacios y tipos de proyección.</p>
+                                                <p className="text-neutral-500 text-sm max-w-50">Configura los espacios y tipos de proyección.</p>
                                             </div>
                                         </Link>
 
@@ -135,7 +162,7 @@ export default async function DashboardPage({
                                             </div>
                                             <div>
                                                 <h3 className="text-2xl font-black uppercase italic mb-2">Gestión de Asientos</h3>
-                                                <p className="text-neutral-500 text-sm max-w-[200px]">Mapeo y distribución de butacas.</p>
+                                                <p className="text-neutral-500 text-sm max-w-50">Mapeo y distribución de butacas.</p>
                                             </div>
                                         </Link>
                                     </>

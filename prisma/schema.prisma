@@ -8,18 +8,34 @@ datasource db {
 }
 
 model Movie {
-  id             Int      @id @default(autoincrement())
-  title          String   @unique
+  id             Int        @id @default(autoincrement()) // Es Int
+  title          String     @unique
   duration       Int
   classification String
-  synopsis       String   @db.Text
-  createdAt      DateTime @default(now())
+  synopsis       String     @db.Text
+  schedules      Schedule[]
+  createdAt      DateTime   @default(now())
 }
 
 model Sala {
-  id        Int      @id @default(autoincrement())
-  nombre    String   @unique
-  tipo      String
-  capacidad Int
-  createdAt DateTime @default(now())
+  id             Int        @id @default(autoincrement()) // Es Int
+  nombre         String     @unique
+  tipo           String
+  capacidad      Int
+  schedules      Schedule[]
+  createdAt      DateTime   @default(now())
+}
+
+model Schedule {
+  id        String   @id @default(cuid())
+  movieId   Int
+  salaId    Int
+  startTime DateTime
+  endTime   DateTime
+
+  movie     Movie    @relation(fields: [movieId], references: [id])
+  sala      Sala     @relation(fields: [salaId], references: [id])
+
+  @@index([salaId])
+  @@index([movieId])
 }
