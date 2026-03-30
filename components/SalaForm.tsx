@@ -21,7 +21,7 @@ export default function SalaForm() {
                 <ToastError
                     key={Date.now()}
                     message={state.error}
-                    onClose={() => setShowError(false)}
+                    action={() => setShowError(false)}
                 />
             )}
 

@@ -1,50 +1,55 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import Asientos from "@/components/SeatMapManager";
+import SeatMapManager from "@/components/SeatMapManager";
 import { prisma } from "@/lib/prisma";
+import { getOccupiedSeats } from "@/lib/actions";
 
-export default async function AsientosPage({ searchParams }: { searchParams: Promise<{ role: string }> }) {
+export default async function AsientosPage({
+                                               searchParams
+                                           }: {
+    searchParams: Promise<{ role: string, scheduleId?: string }>
+}) {
     const params = await searchParams;
-    const role = params.role || 'client';
-    const isAdmin = role === 'admin';
-    // Obtenemos las salas desde MySQL
-    const salasRaw = await prisma.sala.findMany({
-        orderBy: { nombre: 'asc' }
+    const role = params.role || 'admin';
+    const scheduleId = params.scheduleId;
+
+    // Si alguien entra aquí sin elegir una película primero:
+    if (!scheduleId) {
+        return (
+            <main className="min-h-screen bg-neutral-950 text-white p-8 flex flex-col items-center justify-center">
+                <h1 className="text-xl font-bold uppercase italic opacity-50">Selecciona una función desde la cartelera</h1>
+                <Link href={`/dashboard/movies?role=${role}`} className="text-amber-500 mt-4 underline font-bold">
+                    Ir a Cartelera
+                </Link>
+            </main>
+        );
+    }
+
+    const occupiedSeats = await getOccupiedSeats(scheduleId);
+    const currentSchedule = await prisma.schedule.findUnique({
+        where: { id: scheduleId },
+        include: { sala: true, movie: true }
     });
 
-    // Limpiamos para evitar errores de serialización
-    const salas = salasRaw.map(sala => ({
-        id: sala.id,
-        nombre: sala.nombre,
-        capacidad: sala.capacidad,
-        tipo: sala.tipo
-    }));
+    if (!currentSchedule) return <div className="text-white p-10">Error: Horario no encontrado.</div>;
 
     return (
         <main className="min-h-screen bg-neutral-950 text-white p-8">
-            <header className="max-w-7xl mx-auto mb-10">
-                <div className="flex items-center justify-between mb-4">
-                    <Link href={`/dashboard?role=${role}`} className="flex items-center gap-2 text-neutral-500 hover:text-amber-500 mb-6 transition-colors">
-                        <ArrowLeft size={18} /> Volver al panel
-                    </Link>
-                    <span className="text-amber-500 font-bold text-sm tracking-widest uppercase">
-                        Admin: Gestión de Aforo
-                    </span>
+            <div className="max-w-7xl mx-auto">
+                <div className="text-center mb-12">
+                    <h1 className="text-4xl font-black italic tracking-tighter uppercase inline-block border-b-2 border-amber-500 pb-2">
+                        Estado de <span className="text-amber-500">Aforo</span>
+                    </h1>
                 </div>
 
-                <h1 className="text-3xl font-bold italic tracking-tighter uppercase">
-                    Mapeo de <span className="text-amber-500">Asientos</span>
-                </h1>
-                <p className="text-neutral-400 text-sm mt-1">
-                    Visualización automática de butacas según la capacidad de sala.
-                </p>
-            </header>
-
-            <div className="max-w-3xl mx-auto">
-                <div className="border-l-2 border-amber-500 pl-6">
-                    {/* El componente recibe la lista de salas */}
-                    <Asientos salas={salas} />
-                </div>
+                <SeatMapManager
+                    salaConfig={currentSchedule.sala}
+                    movieTitle={currentSchedule.movie.title}
+                    startTime={currentSchedule.startTime}
+                    occupiedSeats={occupiedSeats}
+                    scheduleId={scheduleId}
+                    role={role}
+                />
             </div>
         </main>
     );

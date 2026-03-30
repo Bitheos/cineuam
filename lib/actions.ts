@@ -2,113 +2,134 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
-// --- ACCIÓN PARA REGISTRAR PELÍCULAS ---
-export async function createMovie(prevState: any, formData: FormData) {
-  const title = formData.get("title") as string;
-  const duration = parseInt(formData.get("duration") as string);
-  const classification = formData.get("classification") as string;
-  const synopsis = formData.get("synopsis") as string;
-
+// --- GESTIÓN DE SALAS ---
+export async function getSalas() {
   try {
-    await prisma.movie.create({
-      data: { title, duration, classification, synopsis },
+    return await prisma.sala.findMany({
+      orderBy: { nombre: 'asc' }
     });
-    revalidatePath("/dashboard/movies");
-    return { message: "success" };
-  } catch (error: any) {
-    if (error.code === 'P2002') {
-      return { message: "error", error: "¡Esta película ya está registrada!" };
-    }
-    return { message: "error", error: "Hubo un problema al guardar." };
+  } catch (error) {
+    console.error("Error al obtener salas:", error);
+    return [];
   }
 }
 
-// --- ACCIÓN PARA REGISTRAR SALAS ---
 export async function createSala(prevState: any, formData: FormData) {
   const nombre = formData.get("nombre") as string;
   const tipo = formData.get("tipo") as string;
   const capacidad = parseInt(formData.get("capacidad") as string);
-
-  if (!nombre || !tipo || isNaN(capacidad)) {
-    return { message: "error", error: "Todos los campos son obligatorios." };
-  }
-
   try {
-    await prisma.sala.create({
-      data: { nombre, tipo, capacidad },
-    });
+    await prisma.sala.create({ data: { nombre, tipo, capacidad } });
     revalidatePath("/dashboard/salas");
     return { message: "success" };
-  } catch (error: any) {
-    if (error.code === 'P2002') {
-      return { message: "error", error: "¡El identificador de la sala ya existe!" };
-    }
-    return { message: "error", error: "Error al registrar la sala." };
+  } catch (e) {
+    return { message: "error", error: "Error al crear sala" };
   }
 }
 
-// --- NUEVA ACCIÓN: GESTOR DE HORARIOS ---
+// --- GESTIÓN DE PELÍCULAS ---
+export async function createMovie(prevState: any, formData: FormData) {
+  try {
+    await prisma.movie.create({
+      data: {
+        title: formData.get("title") as string,
+        duration: parseInt(formData.get("duration") as string),
+        classification: formData.get("classification") as string,
+        synopsis: formData.get("synopsis") as string,
+      }
+    });
+    revalidatePath("/dashboard/movies");
+    return { message: "success" };
+  } catch (e) {
+    return { message: "error", error: "Error al crear la película" };
+  }
+}
+
+// --- GESTIÓN DE HORARIOS CORREGIDA ---
 export async function createSchedule(prevState: any, formData: FormData) {
-  const movieId = parseInt(formData.get("movieId") as string);
-  const salaId = parseInt(formData.get("salaId") as string);
-  const startTimeStr = formData.get("startTime") as string;
-  const repetitions = parseInt(formData.get("repetitions") as string) || 1;
+  // Convertimos a Number para solucionar el error TS2322
+  const movieId = Number(formData.get("movieId"));
+  const salaId = Number(formData.get("salaId"));
+  const startTime = new Date(formData.get("startTime") as string);
 
   try {
-    const movie = await prisma.movie.findUnique({ where: { id: movieId } });
-    if (!movie) return { message: "error", error: "Película no encontrada." };
+    // 1. Buscamos la película
+    const movie = await prisma.movie.findUnique({
+      where: { id: movieId }, // Ahora sí es un número
+      select: { duration: true }
+    });
 
-    let currentStart = new Date(startTimeStr);
-    const newSchedules = [];
-
-    for (let i = 0; i < repetitions; i++) {
-      const currentEnd = new Date(currentStart.getTime() + (movie.duration + 20) * 60000);
-
-      // Verificar conflictos para CADA repetición
-      const conflict = await prisma.schedule.findFirst({
-        where: {
-          salaId,
-          AND: [
-            { startTime: { lt: currentEnd } },
-            { endTime: { gt: currentStart } }
-          ]
-        }
-      });
-
-      if (conflict) {
-        return { 
-          message: "error", 
-          error: `Conflicto en la función #${i + 1}. La sala se ocupa a las ${conflict.startTime.toLocaleTimeString()}.` 
-        };
-      }
-
-      newSchedules.push({
-        movieId,
-        salaId,
-        startTime: new Date(currentStart),
-        endTime: currentEnd,
-      });
-
-      // La siguiente función empieza justo cuando termina la anterior (que ya incluye limpieza)
-      currentStart = new Date(currentEnd);
+    if (!movie) {
+      return { message: "error", error: "La película seleccionada no existe." };
     }
 
-    // Insertar todos de golpe
-    await prisma.schedule.createMany({ data: newSchedules });
+    // 2. Cálculo automático del fin (Inicio + Duración)
+    const endTime = new Date(startTime.getTime() + movie.duration * 60000);
+
+    // 3. Guardado en base de datos
+    await prisma.schedule.create({
+      data: {
+        movieId: movieId, // Soluciona el error de la línea 73
+        salaId: salaId,   // Soluciona el error de la línea 74
+        startTime: startTime,
+        endTime: endTime,
+      },
+    });
 
     revalidatePath("/dashboard/schedules");
     return { message: "success" };
   } catch (error) {
-    return { message: "error", error: "Error al generar la programación." };
+    console.error("Error al crear horario:", error);
+    return { message: "error", error: "No se pudo crear el horario." };
+  }
+}
+// --- COMPRA DE TICKETS ---
+export async function getOccupiedSeats(scheduleId: string) {
+  if (!scheduleId) return [];
+  try {
+    const tickets = await prisma.ticket.findMany({
+      where: { scheduleId: scheduleId },
+      select: { seatNumber: true } // Usamos seatNumber para evitar errores
+    });
+    return tickets.map(t => t.seatNumber);
+  } catch (error) {
+    return [];
   }
 }
 
-export async function getSalas() {
+export async function createTicket(prevState: any, formData: FormData) {
+  const scheduleId = formData.get("scheduleId") as string;
+  const seatsJson = formData.get("seats") as string;
+
+  if (!scheduleId || !seatsJson) {
+    return { message: "error", error: "Faltan datos de selección." };
+  }
+
   try {
-    return await prisma.sala.findMany({
-      orderBy: { nombre: 'asc' },
-    });
-  } catch (error) {
-    return [];
+    const selectedSeats = JSON.parse(seatsJson);
+
+    if (selectedSeats.length === 0) {
+      return { message: "error", error: "No has seleccionado ningún asiento." };
+    }
+
+    await prisma.$transaction(
+        selectedSeats.map((seat: string) =>
+            prisma.ticket.create({
+              data: {
+                scheduleId: scheduleId,
+                seatNumber: seat // Mantenemos seatNumber por tu esquema
+              }
+            })
+        )
+    );
+
+    revalidatePath("/dashboard/compra");
+    return { message: "success" };
+  } catch (error: any) {
+    console.error(error);
+    if (error.code === 'P2002') {
+      return { message: "error", error: "Uno de los asientos ya fue ocupado." };
+    }
+    return { message: "error", error: "Error al procesar la reserva." };
   }
 }

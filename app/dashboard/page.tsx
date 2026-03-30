@@ -23,8 +23,14 @@ export default async function DashboardPage({
     const currentTab = params.tab || 'cartelera';
 
     // Obtenemos las películas para la vista del cliente
-    const movies = await prisma.movie.findMany({ orderBy: { createdAt: 'desc' } });
-
+    const movies = await prisma.movie.findMany({
+        include: {
+            schedules: {
+                take: 1, // Traemos el horario más próximo
+                orderBy: { startTime: 'asc' }
+            }
+        }
+    });
     return (
         <div className="flex w-full h-screen bg-neutral-950 text-white font-sans">
             {/* MENÚ IZQUIERDO (SOLO ADMIN) */}
@@ -88,9 +94,18 @@ export default async function DashboardPage({
                                             <span className="flex items-center gap-1"><Tag size={14}/> 4K Ultra HD</span>
                                         </div>
                                         <p className="text-neutral-400 text-sm leading-relaxed line-clamp-3 mb-4">{movie.synopsis}</p>
-                                        <button className="w-full bg-white text-black font-black py-4 rounded-2xl uppercase tracking-widest text-xs hover:bg-orange-500 hover:text-white transition-all shadow-xl shadow-white/5">
-                                            Reservar Tickets
-                                        </button>
+                                        {movie.schedules.length > 0 ? (
+                                            <Link
+                                                href={`/dashboard/compra?scheduleId=${movie.schedules[0].id}&role=${role}`}
+                                                className="w-full bg-white text-black font-black py-4 rounded-2xl uppercase tracking-widest text-xs hover:bg-orange-500 hover:text-white transition-all shadow-xl shadow-white/5 text-center block"
+                                            >
+                                                Reservar Tickets
+                                            </Link>
+                                        ) : (
+                                            <div className="w-full bg-neutral-800 text-neutral-600 font-black py-4 rounded-2xl uppercase tracking-widest text-xs text-center border border-neutral-700 cursor-not-allowed">
+                                                Próximamente
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>

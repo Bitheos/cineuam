@@ -5,7 +5,7 @@ import { PlusCircle } from "lucide-react";
 import ToastError from "./ToastError";
 
 export default function MovieForm() {
-const [state, formAction, isPending] = useActionState(createMovie, null);
+const [state, formAction, isPending] = useActionState<any, any>(createMovie, null);
 const [showError, setShowError] = useState(false);
 
 useEffect(() => {
@@ -21,7 +21,7 @@ return (
             <ToastError 
                 key={Date.now()}
                 message={state.error} 
-                onClose={() => setShowError(false)} 
+                action={() => setShowError(false)}
             />
         )}
         {/* Notificación de Éxito */}
