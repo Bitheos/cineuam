@@ -24,13 +24,16 @@ export default async function DashboardPage({
 
     // Obtenemos las películas para la vista del cliente
     const movies = await prisma.movie.findMany({
-        include: {
-            schedules: {
-                take: 1, // Traemos el horario más próximo
-                orderBy: { startTime: 'asc' }
-            }
+    include: {
+        schedules: {
+            where: {
+                startTime: { gte: new Date() } // Solo funciones de ahora en adelante
+            },
+            include: { sala: true }, // Traemos la info de la sala (nombre, tipo)
+            orderBy: { startTime: 'asc' }
         }
-    });
+    }
+});
     return (
         <div className="flex w-full h-screen bg-neutral-950 text-white font-sans">
             {/* MENÚ IZQUIERDO (SOLO ADMIN) */}
@@ -89,25 +92,54 @@ export default async function DashboardPage({
                                             <h4 className="text-2xl font-black text-orange-500 italic uppercase tracking-tight leading-none group-hover:text-white transition-colors">{movie.title}</h4>
                                             <span className="text-[10px] font-mono bg-neutral-800 px-2 py-1 rounded border border-neutral-700 text-neutral-400">{movie.classification}</span>
                                         </div>
-                                        <div className="flex gap-4 text-[10px] font-bold text-neutral-500 uppercase tracking-widest">
-                                            <span className="flex items-center gap-1"><Clock size={14}/> {movie.duration} min</span>
-                                            <span className="flex items-center gap-1"><Tag size={14}/> 4K Ultra HD</span>
-                                        </div>
-                                        <p className="text-neutral-400 text-sm leading-relaxed line-clamp-3 mb-4">{movie.synopsis}</p>
-                                        {movie.schedules.length > 0 ? (
-                                            <Link
-                                                href={`/dashboard/compra?scheduleId=${movie.schedules[0].id}&role=${role}`}
-                                                className="w-full bg-white text-black font-black py-4 rounded-2xl uppercase tracking-widest text-xs hover:bg-orange-500 hover:text-white transition-all shadow-xl shadow-white/5 text-center block"
-                                            >
-                                                Reservar Tickets
-                                            </Link>
-                                        ) : (
-                                            <div className="w-full bg-neutral-800 text-neutral-600 font-black py-4 rounded-2xl uppercase tracking-widest text-xs text-center border border-neutral-700 cursor-not-allowed">
-                                                Próximamente
-                                            </div>
-                                        )}
+                                        
+                                    <div className="flex gap-4 text-[10px] font-bold text-neutral-500 uppercase tracking-widest">
+                                        <span className="flex items-center gap-1"><Clock size={14}/> {movie.duration} min</span>
+                                        <span className="flex items-center gap-1"><Tag size={14}/> 4K Ultra HD</span>
                                     </div>
-                                ))}
+            
+                                    <p className="text-neutral-400 text-sm leading-relaxed line-clamp-3 mb-4">{movie.synopsis}</p>
+
+                                    {/* --- NUEVA SECCIÓN DE HORARIOS --- */}
+                                    <div className="mt-auto pt-6 border-t border-neutral-800/50">
+                                        <p className="text-[9px] font-black text-neutral-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                                            <Clock size={12} className="text-orange-500" /> Funciones Disponibles
+                                        </p>
+                
+                                        <div className="grid grid-cols-2 gap-3">
+                                            {movie.schedules.length > 0 ? (
+                                                movie.schedules.map((schedule: any) => (
+                                                    <Link
+                                                        key={schedule.id}
+                                                        href={`/dashboard/compra?scheduleId=${schedule.id}&role=client`}
+                                                        className="flex flex-col items-center justify-center p-3 rounded-2xl bg-neutral-950 border border-neutral-800 hover:border-orange-500 hover:bg-orange-500/5 transition-all group/time"
+                                                    >
+                                                        {/* --- FECHA DEL HORARIO --- */}
+                                                        <span className="text-[7px] font-black text-orange-500/60 uppercase tracking-[0.2em] mb-1 group-hover/time:text-orange-500">
+                                                            {new Date(schedule.startTime).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' }).replace('.', '')}
+                                                        </span>
+
+                                                        {/* --- HORA DEL HORARIO --- */}
+                                                        <span className="text-lg font-black text-white group-hover/time:text-orange-500 leading-none">
+                                                            {new Date(schedule.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                        </span>
+
+                                                        {/* --- INFO DE SALA --- */}
+                                                        <span className="text-[8px] font-bold text-neutral-600 uppercase tracking-widest mt-1 group-hover/time:text-neutral-400 text-center">
+                                                            {schedule.sala.nombre} • {schedule.sala.tipo}
+                                                        </span>
+                                                    </Link>
+                                                ))
+                                            ) : (
+                                                <div className="col-span-2 py-4 bg-neutral-900/30 border border-dashed border-neutral-800 rounded-2xl text-center">
+                                                    <span className="text-[9px] font-bold text-neutral-700 uppercase tracking-widest italic">Próximamente</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    {/* --- FIN DE SECCIÓN --- */}
+                                </div>
+                            ))}
                             </div>
                         </section>
                     ) : (

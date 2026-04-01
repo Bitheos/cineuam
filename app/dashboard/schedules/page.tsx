@@ -4,6 +4,15 @@ import Link from "next/link";
 import ScheduleForm from "@/components/ScheduleForm";
 
 export default async function SchedulesPage() {
+    // CRITERIO DE ACEPTACIÓN: Borrar funciones cuya hora de inicio ya pasó
+    await prisma.schedule.deleteMany({
+        where: {
+            startTime: {
+                lt: new Date() // Menor al ahora
+            }
+        }
+    });
+
     const movies = await prisma.movie.findMany();
     const salas = await prisma.sala.findMany();
     const schedules = await prisma.schedule.findMany({

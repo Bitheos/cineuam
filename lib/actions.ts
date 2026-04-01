@@ -51,6 +51,15 @@ export async function createSchedule(prevState: any, formData: FormData) {
   const movieId = Number(formData.get("movieId"));
   const salaId = Number(formData.get("salaId"));
   const startTime = new Date(formData.get("startTime") as string);
+  const ahora = new Date(); // Fecha y hora actual
+
+  // CRITERIO DE ACEPTACIÓN: Verificar que la hora no haya pasado
+  if (startTime < ahora) {
+    return { 
+      message: "error", 
+      error: "No se puede asignar una función a una hora que ya pasó. Por favor, elige un horario futuro." 
+    };
+  }
 
   try {
     // 1. Buscamos la película
